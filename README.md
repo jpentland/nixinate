@@ -91,6 +91,11 @@ Connection to itchy.scratchy.com closed.
 
    A string representing the username a machine to connect to via ssh.
 
+- `sshOptions` *`list of string`*
+
+  Additional options to pass to ssh, such as setting the port.
+
+
 - `buildOn` *`"remote"`* or *`"local"`*
 
   - `"remote"`
