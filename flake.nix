@@ -53,7 +53,7 @@
                 echo "🌐 SSH Host: ${host}"
               '' + (if remote then ''
                 echo "🚀 Sending flake to ${machine} via nix copy:"
-                ( set -x; NIX_SSHOPTS="${sshOptions} ${nix} ${nixOptions} copy ${flake} --to ssh://${user}@${host} )
+                ( set -x; NIX_SSHOPTS="${sshOptions}" ${nix} ${nixOptions} copy ${flake} --to ssh://${user}@${host} )
               '' + (if hermetic then ''
                 echo "🤞 Activating configuration hermetically on ${machine} via ssh:"
                 ( set -x; ${nix} ${nixOptions} copy --derivation ${nixos-rebuild} ${flock} --to ssh://${user}@${host} )
