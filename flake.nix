@@ -19,7 +19,7 @@
         nixinate = {
           nix = prev.pkgs.writeShellScriptBin "nix"
             ''${final.nixVersions.unstable}/bin/nix --experimental-features "nix-command flakes" "$@"'';
-          nixos-rebuild = prev.nixos-rebuild.override { inherit (final) nix; };
+          nixos-rebuild-ng = prev.nixos-rebuild-ng.override { inherit (final) nix; };
         };
         generateApps = flake:
           let
@@ -29,7 +29,7 @@
               inherit (builtins) abort;
               inherit (final.lib) getExe optionalString concatStringsSep;
               nix = "${getExe final.nix}";
-              nixos-rebuild = "${getExe final.nixos-rebuild}";
+              nixos-rebuild = "${getExe final.nixos-rebuild-ng}";
               openssh = "${getExe final.openssh}";
               flock = "${getExe final.flock}";
 
