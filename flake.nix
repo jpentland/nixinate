@@ -42,7 +42,7 @@
               substituteOnTarget = n.substituteOnTarget or false;
               switch = if dryRun then "dry-activate" else "switch";
               nixOptions = concatStringsSep " " (n.nixOptions or []);
-              sshOptions = concatStringsSep " " ((n.sshOptions or []) ++ ["-t"]);
+              sshOptions = concatStringsSep " " (n.sshOptions or []);
 
 
               script =
@@ -53,9 +53,11 @@
                 echo "🌐 SSH Host: ${host}"
               '' + (if remote then ''
                 echo "🚀 Sending flake to ${machine} via nix copy:"
+                echo "NIX_SSHOPTS=${sshOptions}"
                 ( set -x; NIX_SSHOPTS="${sshOptions}" ${nix} ${nixOptions} copy ${flake} --to ssh://${user}@${host} )
               '' + (if hermetic then ''
                 echo "🤞 Activating configuration hermetically on ${machine} via ssh:"
+                echo "NIX_SSHOPTS=${sshOptions}"
                 ( set -x; ${nix} ${nixOptions} copy --derivation ${nixos-rebuild} ${flock} --to ssh://${user}@${host} )
                 ( set -x; ${openssh} ${sshOptions} ${user}@${host} "sudo nix-store --realise ${nixos-rebuild} ${flock} && sudo ${flock} -w 60 /dev/shm/nixinate-${machine} ${nixos-rebuild} ${nixOptions} ${switch} --flake ${flake}#${machine}" )
               '' else ''
@@ -64,7 +66,7 @@
               '')
               else ''
                 echo "🔨 Building system closure locally, copying it to remote store and activating it:"
-                ( set -x; NIX_SSHOPTS="${sshOptions}" ${flock} -w 60 /dev/shm/nixinate-${machine} ${nixos-rebuild} ${nixOptions} ${switch} --flake ${flake}#${machine} --target-host ${user}@${host} --use-remote-sudo ${optionalString substituteOnTarget "-s"} )
+                ( set -x; NIX_SSHOPTS="${sshOptions}" ${flock} -w 60 /dev/shm/nixinate-${machine} ${nixos-rebuild} ${nixOptions} ${switch} --flake ${flake}#${machine} --target-host ${user}@${host} --sudo --ask-sudo-password ${optionalString substituteOnTarget "-s"} )
 
               '');
             in final.writeShellScript "deploy-${machine}.sh" script;
