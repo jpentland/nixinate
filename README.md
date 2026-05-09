@@ -60,6 +60,10 @@ git+file:///etc/nixos
 
 To finally execute the deployment script, use `nix run .#apps.nixinate.myMachine`
 
+You can also use `nix run .#apps.nixinate.myMachine-dry-run` to preview the
+changes without activating them, or `nix run .#apps.nixinate.myMachine-boot` to
+install the configuration for the next boot without activating it immediately.
+
 #### Example Run
 
 ```

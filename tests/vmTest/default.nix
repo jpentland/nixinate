@@ -23,7 +23,7 @@ let
     ((import (path + "/flake.nix")).outputs (inputs // {self = r;}));
   in
     r;
-  mkNixinateTest = { buildOn, hermetic ? false, ... }:
+  mkNixinateTest = { buildOn, hermetic ? false, boot ? false, ... }:
     let
       exampleFlake = pkgs.writeTextFile {
         name = "nixinate-example-flake";
@@ -65,7 +65,12 @@ let
           imports = [
             ./nixinateeBase.nix
             (import ./common.nix { inherit inputs; })
-          ];
+          ]
+          ++ lib.optional boot ({ config, ... }: {
+            boot.loader.grub.enable = lib.mkForce true;
+            boot.loader.grub.device = "/dev/vda";
+            virtualisation.useBootLoader = true;
+          });
           virtualisation = {
             writableStore = true;
             additionalPaths = []
@@ -88,13 +93,22 @@ let
         };
       };
       testScript =
+        let
+          appName = if boot then "nixinatee-boot" else "nixinatee";
+        in
         ''
           start_all()
           nixinatee.wait_for_unit("sshd.service")
           nixinator.wait_for_unit("multi-user.target")
           nixinator.succeed("mkdir ~/.ssh/")
           nixinator.succeed("ssh-keyscan -H nixinatee >> ~/.ssh/known_hosts")
-          nixinator.succeed("exec ${deployScript.nixinate.nixinatee.program} >&2")
+          nixinator.succeed("exec ${(deployScript.nixinate.${appName}).program} >&2")
+        ''
+        + (if boot then ''
+          nixinatee.fail("systemctl is-active nginx.service")
+          nixinatee.reboot()
+        '' else '''')
+        + ''
           nixinatee.wait_for_unit("nginx.service")
           nixinatee.wait_for_open_port("80")
           with subtest("Check that Nginx webserver can be reached by deployer after deployment"):
@@ -113,4 +127,6 @@ in
   remote = (mkNixinateTest { buildOn = "remote"; });
   localHermetic = (mkNixinateTest { buildOn = "local"; hermetic = true; });
   remoteHermetic = (mkNixinateTest { buildOn = "remote"; hermetic = true; });
+  localBoot = (mkNixinateTest { buildOn = "local"; boot = true; });
+  remoteBoot = (mkNixinateTest { buildOn = "remote"; boot = true; });
 }
