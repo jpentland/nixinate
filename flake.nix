@@ -125,7 +125,7 @@
             inherit inputs; pkgs = nixpkgsFor.${system};
           };
         in
-        pkgs.lib.optionalAttrs pkgs.stdenv.isLinux vmTests # vmTests can only be ran on Linux, so append them only if on Linux.
+        pkgs.lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux vmTests # vmTests can only be ran on Linux, so append them only if on Linux.
         //
         {
           # Other checks here...
